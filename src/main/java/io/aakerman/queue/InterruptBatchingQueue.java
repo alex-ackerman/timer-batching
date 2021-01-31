@@ -51,7 +51,7 @@ public class InterruptBatchingQueue<T> implements BatchingQueue<T> {
     }
 
     @Override
-    public void shutdown() {
+    public synchronized void shutdown() {
         if (batch.size() > 0) {
             timeout.interrupt();
             emit();
