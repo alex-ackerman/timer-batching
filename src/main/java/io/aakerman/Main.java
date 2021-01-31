@@ -1,7 +1,8 @@
 package io.aakerman;
 
 import io.aakerman.queue.BatchingQueue;
-import io.aakerman.queue.TimedBatchingQueue;
+import io.aakerman.queue.InterruptBatchingQueue;
+import io.aakerman.queue.TimeoutBatchingQueue;
 
 import java.util.Random;
 import java.util.Timer;
@@ -12,7 +13,7 @@ import java.util.stream.LongStream;
 public class Main {
 
     public static void main(String[] args) {
-        BatchingQueue<Integer> queue = new TimedBatchingQueue<>(300, 5);
+        BatchingQueue<Integer> queue = new TimeoutBatchingQueue<>(300, 5);
         queue.onBatch(batch -> System.out.println(String.format("%s => size %d", batch, batch.size())));
 
         LongStream randomDelays = new Random().longs(100, 20, 10000);

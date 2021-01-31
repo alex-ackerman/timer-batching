@@ -1,13 +1,12 @@
 package io.aakerman.queue;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.function.Consumer;
 
 public class InterruptBatchingQueue<T> implements BatchingQueue<T> {
 
-    private final Collection<T> batch;
+    private Collection<T> batch;
 
     private final int batchLimit;
 
@@ -20,7 +19,6 @@ public class InterruptBatchingQueue<T> implements BatchingQueue<T> {
     private boolean inBatch;
 
     public InterruptBatchingQueue(long batchTimeout, int batchLimit) {
-        this.batch = new LinkedList<>();
         this.batchTimeout = batchTimeout;
         this.batchLimit = batchLimit;
         this.inBatch = false;
@@ -28,6 +26,9 @@ public class InterruptBatchingQueue<T> implements BatchingQueue<T> {
 
     @Override
     public synchronized void add(T element) {
+        if (batch == null) {
+            batch = new LinkedList<>();
+        }
         batch.add(element);
         if (batch.size() == batchLimit) {
             timeout.interrupt();
@@ -58,8 +59,8 @@ public class InterruptBatchingQueue<T> implements BatchingQueue<T> {
     }
 
     private void emit() {
-        consumer.accept(new ArrayList<>(batch));
-        batch.clear();
+        consumer.accept(batch);
+        batch = new LinkedList<>();
         inBatch = false;
     }
 }

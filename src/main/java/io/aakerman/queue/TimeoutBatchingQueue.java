@@ -1,11 +1,14 @@
 package io.aakerman.queue;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.function.Consumer;
 
-public class TimedBatchingQueue<T> implements BatchingQueue<T> {
+public class TimeoutBatchingQueue<T> implements BatchingQueue<T> {
 
-    private final Collection<T> batch;
+    private Collection<T> batch;
 
     private final Timer timer;
 
@@ -19,8 +22,7 @@ public class TimedBatchingQueue<T> implements BatchingQueue<T> {
 
     private boolean inBatch;
 
-    public TimedBatchingQueue(long batchTimeout, int batchLimit) {
-        this.batch = new LinkedList<>();
+    public TimeoutBatchingQueue(long batchTimeout, int batchLimit) {
         this.batchTimeout = batchTimeout;
         this.timer = new Timer();
         this.batchLimit = batchLimit;
@@ -29,6 +31,9 @@ public class TimedBatchingQueue<T> implements BatchingQueue<T> {
 
     @Override
     public synchronized void add(T element) {
+        if (batch == null) {
+            batch = new LinkedList<>();
+        }
         batch.add(element);
         if (batch.size() == batchLimit) {
             emit();
@@ -61,8 +66,8 @@ public class TimedBatchingQueue<T> implements BatchingQueue<T> {
     }
 
     private void emit() {
-        consumer.accept(new ArrayList<>(batch));
-        batch.clear();
+        consumer.accept(batch);
+        batch = new LinkedList<>();
         inBatch = false;
         task.cancel();
     }
